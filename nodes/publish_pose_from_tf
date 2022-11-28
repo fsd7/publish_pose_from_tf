@@ -18,7 +18,7 @@ class PublishPoseFromTF:
         # Timeout for lookup transform between base_frame and pose_frame
         self._timeout = rospy.get_param('~timeout', 1.0)
 
-        self._pose_pub = rospy.Publisher('~pose', PoseStamped, queue_size = 1)
+        self._pose_pub = rospy.Publisher('~transform', TransformStamped, queue_size = 1)
 
         self.main_loop()
     
@@ -26,19 +26,10 @@ class PublishPoseFromTF:
         while not rospy.is_shutdown():
             try:
                 transform = self._tf_buffer.lookup_transform(self._base_frame, self._pose_frame, rospy.Time.now(), rospy.Duration(self._timeout))
+                self._pose_pub.publish(transform)
             except:
-                continue 
-
-            pose = PoseStamped()
-            pose.header.frame_id = self._base_frame
-            pose.header.stamp = transform.header.stamp
-
-            pose.pose.position.x = transform.transform.translation.x
-            pose.pose.position.y = transform.transform.translation.y
-            pose.pose.position.z = transform.transform.translation.z
-            pose.pose.orientation = transform.transform.rotation
-
-            self._pose_pub.publish(pose)
+                continue
+            
             
  
 if __name__ == '__main__':
